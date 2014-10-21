@@ -16,24 +16,19 @@ public:
     void draw();
     
     void keyPressed(int key);
-    void mousePressed(int x, int y, int button);
-    
-    //    ofImage current_picture;
-    //    ofImage next_picture;
-    //    int current_picture_index;
-    //    ofDirectory picture_directory;
-    
+
     ofxTrueTypeFontUC font;
     
     //  A message to be displayed
     struct Message {
         string text;
         // Right hand boundary of the message
-        int position;
+        float position;
         int width;
     };
     vector<Message> messages;
     float text_speed;
+    int     message_spacing;
     
     ofxUDPManager textMessageInput;
     ofxUDPManager toPython;
