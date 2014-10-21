@@ -3,7 +3,6 @@
 #include "ofMain.h"
 #include "ofxNetwork.h"
 #include "ofxSyphon.h"
-#include "ofxSecondWindow.h"
 
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 300
@@ -17,8 +16,6 @@ public:
     
     void keyPressed(int key);
     void mousePressed(int x, int y, int button);
-    
-    ofxSecondWindow controlWindow;
     
     //    ofImage current_picture;
     //    ofImage next_picture;

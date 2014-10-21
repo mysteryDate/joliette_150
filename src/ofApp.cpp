@@ -5,8 +5,7 @@ void ofApp::setup(){
     
     // For portability
     ofSetDataPathRoot("../Resources/data/");
-    
-    controlWindow.setup("Control Window", 50, 50, 1024, 768, false);
+    ofSetFrameRate(60);
     
     font.loadFont("shimmerbold_opentype.ttf", 30, true, true);
     
@@ -47,31 +46,40 @@ void ofApp::update(){
         float width = font.stringWidth(messages[i].text);
         
         if (messages[i].position + width < 0) {
-            messages[i].position = WINDOW_WIDTH;
+            messages.erase(messages.begin());
         }
+        
     }
     
-//    int currentTime = ofGetElapsedTimeMillis()/1000;
-//    if (currentTime % 3 == 0 and message_trigger and currentTime > 1) {
-//        string message = "new message";
-//        int success = toPython.Send(message.c_str(), message.length());
-//        message_trigger = false;
-//    }
-//    if (currentTime % 2 == 0 and currentTime % 3 != 0){
-//        message_trigger = true;
-//    }
-//    
-//    if (textMessage[0] != 0) {
-//        message = textMessage;
-//    }
+    if (messages.size() > 0) {
+    Message lastMessage = messages.back();
+    if (lastMessage.position + font.stringWidth(lastMessage.text) < WINDOW_WIDTH) {
+        string message_to_python = "new message";
+        int success = toPython.Send(message_to_python.c_str(), message_to_python.length());
+    }
+    }
+    if (textMessage[0] != 0) {
+        Message newMessage;
+        newMessage.text = textMessage;
+        newMessage.position = WINDOW_WIDTH;
+        messages.push_back(newMessage);
+    }
     
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-    controlWindow.begin();
-    ofClear(0, 0, 0);
+    // Clear with alpha, so we can capture via syphon and composite elsewhere should we want.
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for (int i = 0; i < messages.size(); i++) {
+        font.drawString(messages[i].text, messages[i].position, 50);
+    }
+
+    syphon_out.publishScreen();
+
     if (controls_on) {
         stringstream reportStream;
         reportStream
@@ -83,26 +91,14 @@ void ofApp::draw(){
         << "    s:      save message database" << endl
         << "    l:      load message database" << endl
         << "    backspace:  shutdown" << endl;
+        Message newest = messages.back();
+        int width = font.stringWidth(newest.text);
+        reportStream << "Message text: " << newest.text << endl
+        << "Width: " << width << endl
+        << "Position: " << newest.position << endl
+        << "Pix left: " << newest.position + width << endl;
         ofDrawBitmapString(reportStream.str(), 50,150);
     }
-    controlWindow.end();
-    // Clear with alpha, so we can capture via syphon and composite elsewhere should we want.
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //    int imgWidth = current_picture.width;
-    //    int imgHeight = current_picture.height;
-    //    float widthRatio = WINDOW_WIDTH / imgWidth;
-    //    float heightRatio = WINDOW_HEIGHT / imgHeight;
-    //    if (widthRatio < heightRatio) {
-    //        widthRatio = heightRatio;
-    //    }
-    //    else
-    //        heightRatio = widthRatio;
-    //    current_picture.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
-    font.drawString(messages[0].text, messages[0].position, 50);
-
-    syphon_out.publishScreen();
-
 }
 
 //--------------------------------------------------------------
@@ -139,10 +135,6 @@ void ofApp::keyPressed(int key){
     }
     if (key == 'c') {
         controls_on = !controls_on;
-    }
-    if (key == 's') {
-        string message = "Shutdown";
-        int success = toPython.Send(message.c_str(), message.length());
     }
 }
 

@@ -1,0 +1,1 @@
+OpenFrameworks project for 150th anniversary of Joliette, Québec.
