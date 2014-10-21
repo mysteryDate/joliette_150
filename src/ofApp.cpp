@@ -7,7 +7,7 @@ void ofApp::setup(){
     ofSetDataPathRoot("../Resources/data/");
     ofSetFrameRate(60);
     
-    font.loadFont("shimmerbold_opentype.ttf", 60, true, true);
+    font.loadFont("shimmerbold_opentype.ttf", 30, true, true);
     
     textMessageInput.Create();
     textMessageInput.Bind(7011);
@@ -30,9 +30,9 @@ void ofApp::setup(){
     controls_on = true;
     running = true;
     
-    //    string command = "python "+ofToDataPath("of_controller.py",true);
-    //    cout << command;
-    //    system(command.c_str());
+    string command = "python "+ofToDataPath("of_controller.py")+" "+ofToDataPath("");
+    cout << command << endl;
+    system(command.c_str());
 }
 
 //--------------------------------------------------------------
