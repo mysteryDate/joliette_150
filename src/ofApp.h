@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxNetwork.h"
 #include "ofxSyphon.h"
+#include "ofxTrueTypeFontUC.h"
 
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 300
@@ -22,12 +23,14 @@ public:
     //    int current_picture_index;
     //    ofDirectory picture_directory;
     
-    ofTrueTypeFont font;
+    ofxTrueTypeFontUC font;
     
     //  A message to be displayed
     struct Message {
         string text;
+        // Right hand boundary of the message
         int position;
+        int width;
     };
     vector<Message> messages;
     float text_speed;
@@ -40,4 +43,5 @@ public:
     ofxSyphonServer syphon_out;
     
     bool controls_on;
+    bool running;
 };

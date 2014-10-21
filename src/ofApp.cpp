@@ -26,7 +26,8 @@ void ofApp::setup(){
     
     syphon_out.setName("text output");
 
-    controls_on = false;
+    controls_on = true;
+    running = true;
     
     //    string command = "python "+ofToDataPath("of_controller.py",true);
     //    cout << command;
@@ -40,20 +41,19 @@ void ofApp::update(){
     char textMessage[message_size];
     textMessageInput.Receive(textMessage, message_size);
     
+    if (running) {
     for (int i = 0; i < messages.size(); i++) {
         messages[i].position -= text_speed;
-        // Get width of the text
-        float width = font.stringWidth(messages[i].text);
         
-        if (messages[i].position + width < 0) {
+        if (messages[i].position < 0) {
             messages.erase(messages.begin());
         }
-        
+    }
     }
     
     if (messages.size() > 0) {
     Message lastMessage = messages.back();
-    if (lastMessage.position + font.stringWidth(lastMessage.text) < WINDOW_WIDTH) {
+    if (lastMessage.position < WINDOW_WIDTH) {
         string message_to_python = "new message";
         int success = toPython.Send(message_to_python.c_str(), message_to_python.length());
     }
@@ -61,7 +61,11 @@ void ofApp::update(){
     if (textMessage[0] != 0) {
         Message newMessage;
         newMessage.text = textMessage;
-        newMessage.position = WINDOW_WIDTH;
+        newMessage.width = font.stringWidth(textMessage);
+        newMessage.position = WINDOW_WIDTH + newMessage.width;
+        if (messages.size() > 0 ) {
+            newMessage.position = messages.back().position + newMessage.width;
+        }
         messages.push_back(newMessage);
     }
     
@@ -75,7 +79,7 @@ void ofApp::draw(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (int i = 0; i < messages.size(); i++) {
-        font.drawString(messages[i].text, messages[i].position, 50);
+        font.drawString(messages[i].text, messages[i].position - messages[i].width, 50);
     }
 
     syphon_out.publishScreen();
@@ -91,12 +95,12 @@ void ofApp::draw(){
         << "    s:      save message database" << endl
         << "    l:      load message database" << endl
         << "    backspace:  shutdown" << endl;
-        Message newest = messages.back();
-        int width = font.stringWidth(newest.text);
-        reportStream << "Message text: " << newest.text << endl
-        << "Width: " << width << endl
-        << "Position: " << newest.position << endl
-        << "Pix left: " << newest.position + width << endl;
+//        Message newest = messages.back();
+//        int width = font.stringWidth(newest.text);
+//        reportStream << "Message text: " << newest.text << endl
+//        << "Width: " << width << endl
+//        << "Position: " << newest.position << endl
+//        << "Pix left: " << newest.position + width << endl;
         ofDrawBitmapString(reportStream.str(), 50,150);
     }
 }
@@ -117,7 +121,7 @@ void ofApp::keyPressed(int key){
                 break;
                 
             case ' ':
-                message = "start-stop";
+                running = !running;
                 break;
                 
             case 'l':
