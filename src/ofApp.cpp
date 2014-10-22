@@ -30,9 +30,7 @@ void ofApp::setup(){
     controls_on = true;
     running = true;
     
-    string command = "python "+ofToDataPath("of_controller.py")+" "+ofToDataPath("");
-    cout << command << endl;
-    system(command.c_str());
+    pythonThread.start();
 }
 
 //--------------------------------------------------------------
@@ -160,4 +158,10 @@ void ofApp::keyPressed(int key){
     if (key == 'c') {
         controls_on = !controls_on;
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::exit(){
+    string message = "shutdown";
+    toPython.Send(message.c_str(), message.length());
 }

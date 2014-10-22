@@ -4,6 +4,8 @@
 #include "ofxNetwork.h"
 #include "ofxSyphon.h"
 #include "ofxTrueTypeFontUC.h"
+#include "pythonThread.h"
+
 
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 300
@@ -14,6 +16,7 @@ public:
     void setup();
     void update();
     void draw();
+    void exit();
     
     void keyPressed(int key);
 
@@ -39,4 +42,7 @@ public:
     
     bool controls_on;
     bool running;
+  
+    PythonThread pythonThread;
+
 };

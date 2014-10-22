@@ -85,16 +85,16 @@ while True:
         break
 
     if data == "save":
-        gmail.save(path+"message_database.xml")
+        gmail.save(PATH+"message_database.xml")
 
     if data == "load":
-        gmail.load(path+"message_database.xml")
+        gmail.load(PATH+"message_database.xml")
 
     if data == "rebuild":
-        gmail.save(path+"message_database.xml")
+        gmail.save(PATH+"message_database.xml")
         # re-initialize the monitor
         gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=True)
-        gmail.load(path+"message_database.xml")
+        gmail.load(PATH+"message_database.xml")
 
 
 # Get time in RFC 2822 Internet email standard:
