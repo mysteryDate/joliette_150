@@ -6,8 +6,9 @@
 #include "ofxTrueTypeFontUC.h"
 #include "pythonThread.h"
 
+#define UDP_PORT 7011
 
-#define WINDOW_WIDTH 1024
+#define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 300
 
 class ofApp : public ofBaseApp{
@@ -19,6 +20,7 @@ public:
     void exit();
     
     void keyPressed(int key);
+    void recalculateMessagePositions();
 
     ofxTrueTypeFontUC font;
     
@@ -35,7 +37,7 @@ public:
     
     ofxUDPManager textMessageInput;
     ofxUDPManager toPython;
-    bool message_trigger;
+    ofxUDPManager controlMessageInput;
 
     //Syphon
     ofxSyphonServer syphon_out;

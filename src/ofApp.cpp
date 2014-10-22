@@ -4,26 +4,24 @@
 void ofApp::setup(){
     
     // For portability
-    ofSetDataPathRoot("../Resources/data/");
+//    ofSetDataPathRoot("../Resources/data/");
     ofSetFrameRate(60);
     
     font.loadFont("shimmerbold_opentype.ttf", 30, true, true);
     
     textMessageInput.Create();
-    textMessageInput.Bind(7011);
+    textMessageInput.Bind(UDP_PORT);
     textMessageInput.SetNonBlocking(true);
-    Message firstMessage;
-    firstMessage.text = "Hello";
-    firstMessage.position = WINDOW_WIDTH;
-    messages.push_back(firstMessage);
     text_speed = 1;
     message_spacing = 30;
     
     toPython.Create();
-    toPython.Connect("127.0.0.1", 7012); // Assuming local machine for now
+    toPython.Connect("127.0.0.1", UDP_PORT+1); // Assuming local machine for now
     toPython.SetNonBlocking(true);
     
-    message_trigger = false;
+    controlMessageInput.Create();
+    controlMessageInput.Bind(UDP_PORT+2);
+    controlMessageInput.SetNonBlocking(true);
     
     syphon_out.setName("text output");
 
@@ -36,31 +34,34 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    int message_size = 100000;
-    char textMessage[message_size];
-    textMessageInput.Receive(textMessage, message_size);
-    
     if (running) {
-    for (int i = 0; i < messages.size(); i++) {
-        messages[i].position -= text_speed;
-        
-        if (messages[i].position < 0) {
-            messages.erase(messages.begin());
+        for (int i = 0; i < messages.size(); i++) {
+            messages[i].position -= text_speed;
+            // Erase messages off the screen
+            if (messages[i].position < 0) {
+                messages.erase(messages.begin());
+            }
         }
-    }
     }
     
     if (messages.size() > 0) {
         Message lastMessage = messages.back();
+        // Ask for a new message if the final one has cleared the end of the screen
         if (lastMessage.position < WINDOW_WIDTH) {
             string message_to_python = "new message";
-            int success = toPython.Send(message_to_python.c_str(), message_to_python.length());
+            toPython.Send(message_to_python.c_str(), message_to_python.length());
         }
     }
+    // Ask for a new message if we have none
     else {
         string message_to_python = "new message";
         int success = toPython.Send(message_to_python.c_str(), message_to_python.length());
     }
+    
+    // Receive messages if they're waiting
+    int message_size = 100000;
+    char textMessage[message_size];
+    textMessageInput.Receive(textMessage, message_size);
     if (textMessage[0] != 0) {
         Message newMessage;
         newMessage.text = textMessage;
@@ -74,6 +75,18 @@ void ofApp::update(){
     
 }
 
+// This is just for changing font size, so things don't overlap
+void ofApp::recalculateMessagePositions() {
+    // First, get all the widths
+    for (int i = 0; i < messages.size(); i++) {
+        messages[i].width = font.stringWidth(messages[i].text);
+    }
+    // Don't reposition the first message
+    for (int i = 1; i < messages.size(); i++) {
+        messages[i].position = messages[i-1].position + messages[i].width + message_spacing;
+    }
+}
+
 //--------------------------------------------------------------
 void ofApp::draw(){
 
@@ -82,7 +95,7 @@ void ofApp::draw(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (int i = 0; i < messages.size(); i++) {
-        font.drawString(messages[i].text, messages[i].position - messages[i].width, 150);
+        font.drawString(messages[i].text, messages[i].position - messages[i].width, font.getSize());
     }
 
     syphon_out.publishScreen();
@@ -91,19 +104,15 @@ void ofApp::draw(){
         stringstream reportStream;
         reportStream
         << "Framerate: " << ofToString((ofGetFrameRate())) << endl
-        << "Time: " << ofToString(ofGetElapsedTimeMillis()/1000) << endl
         << "Controls: " << endl
-        << "    f:      toggle fullscreen" << endl
         << "    space:  start/stop" << endl
-        << "    s:      save message database" << endl
-        << "    l:      load message database" << endl
-        << "    backspace:  shutdown monitor" << endl
         << "    M, m:   Increase/decrease message spacing (" << message_spacing << ")" << endl
         << "    T, t:   Increase/decrease scroll speed (" << text_speed << ")" << endl
-        << "    c:      turn off this display" << endl;
+        << "    +, -:   Increase/decrease text size" << endl
+        << "    c:      turn off this display (this text is not syphoned)." << endl;
         ofPushStyle();
         ofSetColor(0, 255, 0);
-        ofDrawBitmapString(reportStream.str(), 10,10);
+        ofDrawBitmapString(reportStream.str(), 10, font.getSize() + 30);
         ofPopStyle();
     }
 }
@@ -114,10 +123,6 @@ void ofApp::keyPressed(int key){
     string message;
     if (controls_on) {
         switch (key) {
-                
-            case 'f':
-                ofToggleFullscreen();
-                break;
                 
             case 's':
                 message = "save";
@@ -137,10 +142,12 @@ void ofApp::keyPressed(int key){
             
             case 'M':
                 message_spacing++;
+                recalculateMessagePositions();
                 break;
                 
             case 'm':
                 message_spacing--;
+                recalculateMessagePositions();
                 break;
                 
             case 'T':
@@ -149,6 +156,19 @@ void ofApp::keyPressed(int key){
                 
             case 't':
                 text_speed-= 0.1;
+                break;
+                
+            case '=':
+            case '+':
+                font.loadFont("shimmerbold_opentype.ttf", font.getSize()+1, true, true);
+                recalculateMessagePositions();
+                break;
+                
+            case '-':
+            case '_':
+                int size = font.getSize();
+                font.loadFont("shimmerbold_opentype.ttf", font.getSize()-1, true, true);
+                recalculateMessagePositions();
                 break;
         }
     }
@@ -162,6 +182,15 @@ void ofApp::keyPressed(int key){
 
 //--------------------------------------------------------------
 void ofApp::exit(){
-    string message = "shutdown";
+    string message = "save";
+    toPython.Send(message.c_str(), message.length());
+    int message_size = 100000;
+    char controlMessage[message_size];
+    textMessageInput.Receive(controlMessage, message_size);
+    // Wait for a ready message from python
+    while ( controlMessage[0] == 0) {
+        controlMessageInput.Receive(controlMessage, message_size);
+    }
+    message = "shutdown";
     toPython.Send(message.c_str(), message.length());
 }

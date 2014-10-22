@@ -1,0 +1,6 @@
+*.app
+*.xcconfig
+*.xcodeproj
+*.plist
+*.make
+Makefile

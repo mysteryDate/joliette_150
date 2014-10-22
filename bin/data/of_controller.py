@@ -17,6 +17,9 @@ import calendar
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 7011
+# UDP_PORT = Python -> oF text messags
+# UDP_PORT + 1 = oF -> Python
+# UDP_PORT + 2 = Python -> oF control messages
 
 MATCH_LABEL = "SMS"
 FILTERED_LABELS = ["Refuser", "RefuserAutomatique", "TRASH"]
@@ -53,6 +56,8 @@ while True:
 
     input_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
     input_sock.bind(((UDP_IP), UDP_PORT+1))
+    output_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    output_sock.sendto("ready", (UDP_IP, UDP_PORT+2))
     # It will hang on this line until oF sends a message
     # Which is unexpectedly brilliant
     data, addr = input_sock.recvfrom(1024)
@@ -81,8 +86,9 @@ while True:
         if len(EXCLUDED_MESSAGES) > NO_REPEAT_LENGTH:
             EXCLUDED_MESSAGES.pop(0)
 
-    if data == "shutdown":
-        break
+    # Because we update on every message, we don't actually need to do anything here
+    if data == "update":
+        pass
 
     if data == "save":
         gmail.save(PATH+"message_database.xml")
@@ -95,6 +101,11 @@ while True:
         # re-initialize the monitor
         gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=True)
         gmail.load(PATH+"message_database.xml")
+
+    if data == "shutdown":
+        print "goodbye"
+        break
+
 
 
 # Get time in RFC 2822 Internet email standard:

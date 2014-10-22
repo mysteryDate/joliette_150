@@ -94,6 +94,7 @@ class Monitor():
         Load in an xml file containing messages
         """
         tree = etree.parse(file_path)
+        print file_path
         for entry in tree.findall('MESSAGE'):
             new_message = Message()
             new_message.id = unicode(entry.find("ID").text)
@@ -127,6 +128,7 @@ class Monitor():
             message_text.text = message.message
         tree = etree.ElementTree(db)
         tree.write(file_path, encoding="UTF-8", pretty_print=True)
+        print file_path
         if self._verbose:
             print "Saved", len(self.database), "messages"
 
