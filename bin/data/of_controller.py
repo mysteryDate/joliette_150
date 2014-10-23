@@ -24,9 +24,7 @@ UDP_PORT = 7011
 MATCH_LABEL = "SMS"
 FILTERED_LABELS = ["Refuser", "RefuserAutomatique", "TRASH"]
 
-RESPONSE = u"Merci pour ton message! Regarde bien, il apparaîtra sous peu sur la Grande Carte Blanche! :)"
-
-gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=False, path=PATH)
+gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=False, response=True, path=PATH)
 gmail.load(PATH+"message_database.xml")
 NO_REPEAT_LENGTH = 5
 EXCLUDED_MESSAGES = []
@@ -82,20 +80,10 @@ while True:
         if len(EXCLUDED_MESSAGES) > NO_REPEAT_LENGTH:
             EXCLUDED_MESSAGES.pop(0)
 
-    # Because we update on every message, we don't actually need to do anything here
-    if data == "update":
-        pass
-
     if data == "save":
         gmail.save(PATH+"message_database.xml")
 
     if data == "load":
-        gmail.load(PATH+"message_database.xml")
-
-    if data == "rebuild":
-        gmail.save(PATH+"message_database.xml")
-        # re-initialize the monitor
-        gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=True)
         gmail.load(PATH+"message_database.xml")
 
     if data == "shutdown":

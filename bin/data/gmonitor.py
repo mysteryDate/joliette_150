@@ -36,14 +36,16 @@ class Monitor():
 
     EMAIL_ADDRESS = "carte.blanche.joliette@gmail.com"
     RESPONSE_ADDRESS = "@desksms.appspotmail.com"
+    RESPONSE = u"Merci pour ton message! Regarde bien, il apparaîtra sous peu sur la Grande Carte Blanche! :)"
 
-    def __init__(self, match_label, filtered_labels=[], verbose=False, path=""):
+    def __init__(self, match_label, filtered_labels=[], verbose=False, response=False, path=""):
         """
         match_label is a string for the label we look under (e.x. "SMS")
         filteredLabels is a list of strings of label names to be filtered
         verbose turns on error logging
         For now, we need a match label
         """
+        self.response = response
         self.path = path
         # Path to the client_secret.json file downloaded from the Developer Console
         CLIENT_SECRET_FILE = path+'client_secret.json'
@@ -220,6 +222,8 @@ class Monitor():
         self.database[message_id] = new_message_entry
         if self._verbose:
             print str(message_id)+"\t| "+new_message_entry.message+"\t| Added"
+        if self.response:
+            self.respond(message_id, self.RESPONSE)
         return True
 
     def print_database(self):
