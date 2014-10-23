@@ -18,7 +18,6 @@ public:
     }
     void threadedFunction() {
         string command = "python "+ofToDataPath("of_controller.py")+" "+ofToDataPath("");
-        cout << command << endl;
         system(command.c_str());
     }
     void stop() {

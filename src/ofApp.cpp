@@ -34,6 +34,21 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     
+    // Receive messages if they're waiting
+    int message_size = 100000;
+    char textMessage[message_size];
+    textMessageInput.Receive(textMessage, message_size);
+    if (textMessage[0] != 0) {
+        Message newMessage;
+        newMessage.text = textMessage;
+        newMessage.width = font.stringWidth(textMessage);
+        newMessage.position = WINDOW_WIDTH + newMessage.width;
+        if (messages.size() > 0 ) {
+            newMessage.position = messages.back().position + newMessage.width + message_spacing;
+        }
+        messages.push_back(newMessage);
+    }
+    
     if (running) {
         for (int i = 0; i < messages.size(); i++) {
             messages[i].position -= text_speed;
@@ -58,20 +73,6 @@ void ofApp::update(){
         int success = toPython.Send(message_to_python.c_str(), message_to_python.length());
     }
     
-    // Receive messages if they're waiting
-    int message_size = 100000;
-    char textMessage[message_size];
-    textMessageInput.Receive(textMessage, message_size);
-    if (textMessage[0] != 0) {
-        Message newMessage;
-        newMessage.text = textMessage;
-        newMessage.width = font.stringWidth(textMessage);
-        newMessage.position = WINDOW_WIDTH + newMessage.width;
-        if (messages.size() > 0 ) {
-            newMessage.position = messages.back().position + newMessage.width + message_spacing;
-        }
-        messages.push_back(newMessage);
-    }
     
 }
 
@@ -172,6 +173,9 @@ void ofApp::keyPressed(int key){
                 break;
         }
     }
+    
+    text_speed = ofClamp(text_speed, 0, 7);
+    
     if (message.length() > 0) {
         toPython.Send(message.c_str(), message.length());
     }
@@ -182,15 +186,6 @@ void ofApp::keyPressed(int key){
 
 //--------------------------------------------------------------
 void ofApp::exit(){
-    string message = "save";
-    toPython.Send(message.c_str(), message.length());
-    int message_size = 100000;
-    char controlMessage[message_size];
-    textMessageInput.Receive(controlMessage, message_size);
-    // Wait for a ready message from python
-    while ( controlMessage[0] == 0) {
-        controlMessageInput.Receive(controlMessage, message_size);
-    }
-    message = "shutdown";
+    string message = "shutdown";
     toPython.Send(message.c_str(), message.length());
 }

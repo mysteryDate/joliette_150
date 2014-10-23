@@ -26,7 +26,7 @@ FILTERED_LABELS = ["Refuser", "RefuserAutomatique", "TRASH"]
 
 RESPONSE = u"Merci pour ton message! Regarde bien, il apparaîtra sous peu sur la Grande Carte Blanche! :)"
 
-gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=True, path=PATH)
+gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=False, path=PATH)
 gmail.load(PATH+"message_database.xml")
 NO_REPEAT_LENGTH = 5
 EXCLUDED_MESSAGES = []
@@ -34,8 +34,6 @@ EXCLUDED_MESSAGES = []
 def GetNextMessage(excluded_messages):
     """
     A helper function to find the best message to next display
-    Probably too bruteforcey
-    It's actually linear, which I now know is good enough
     """
     max_ratio = 0
     best_id = gmail.database.keys()[0]
@@ -56,8 +54,6 @@ while True:
 
     input_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
     input_sock.bind(((UDP_IP), UDP_PORT+1))
-    output_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    output_sock.sendto("ready", (UDP_IP, UDP_PORT+2))
     # It will hang on this line until oF sends a message
     # Which is unexpectedly brilliant
     data, addr = input_sock.recvfrom(1024)
@@ -73,7 +69,7 @@ while True:
 
         phone = message_object.sender
         # Add dashes to phone number
-        phone = ('-').join([phone[3:6], phone[6:]]) 
+        phone = ('-').join([phone[-7:-4], phone[-4:]]) 
         output = phone + ": " + message_object.message
 
         output_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -103,6 +99,7 @@ while True:
         gmail.load(PATH+"message_database.xml")
 
     if data == "shutdown":
+        gmail.save(PATH+"message_database.xml")
         print "goodbye"
         break
 

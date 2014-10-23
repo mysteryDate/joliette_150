@@ -20,6 +20,9 @@ import httplib2
 # For sending messages
 from email.mime.text import MIMEText
 
+# For getting phone numbers out of senders
+import re
+
 class Monitor():
     """
     A monitor for our gmail inbox
@@ -94,7 +97,6 @@ class Monitor():
         Load in an xml file containing messages
         """
         tree = etree.parse(file_path)
-        print file_path
         for entry in tree.findall('MESSAGE'):
             new_message = Message()
             new_message.id = unicode(entry.find("ID").text)
@@ -128,7 +130,6 @@ class Monitor():
             message_text.text = message.message
         tree = etree.ElementTree(db)
         tree.write(file_path, encoding="UTF-8", pretty_print=True)
-        print file_path
         if self._verbose:
             print "Saved", len(self.database), "messages"
 
@@ -203,7 +204,11 @@ class Monitor():
         for entry in new_message_data['payload']['headers']:
             if entry['name'] == 'From':
                 # Phone number with area code
-                new_message_entry.sender = entry['value'].split('+')[1].split('"')[0][-10:]
+                try:
+                    new_message_entry.sender = re.findall('\d{10,11}', entry['value'])[0]
+                except Exception as e: 
+                    if _self.verbose: print(e)
+                    return False
             if entry['name'] == 'Date':
                 new_message_entry.time = entry['value']
                 new_message_entry.last_displayed = new_message_entry.time
