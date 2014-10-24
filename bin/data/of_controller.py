@@ -13,6 +13,8 @@ import socket
 import time
 import imaplib2
 
+import threading
+
 import calendar
 
 UDP_IP = "127.0.0.1"
@@ -24,10 +26,11 @@ UDP_PORT = 7011
 MATCH_LABEL = "SMS"
 FILTERED_LABELS = ["Refuser", "RefuserAutomatique", "TRASH"]
 
-gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=False, response=True, path=PATH)
+gmail = gmonitor.Monitor(MATCH_LABEL, FILTERED_LABELS, verbose=True, response=True, path=PATH)
 gmail.load(PATH+"message_database.xml")
 NO_REPEAT_LENGTH = 5
 EXCLUDED_MESSAGES = []
+newest_id = ""
 
 def GetNextMessage(excluded_messages):
     """
@@ -50,18 +53,20 @@ def GetNextMessage(excluded_messages):
 
 while True:
 
-    input_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);
-    input_sock.bind(((UDP_IP), UDP_PORT+1))
+    gmail.update()
+    input_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    input_sock.bind((UDP_IP, UDP_PORT+1))
     # It will hang on this line until oF sends a message
     # Which is unexpectedly brilliant
     data, addr = input_sock.recvfrom(1024)
 
-    gmail.update()
     if data == "new message": #oF wants a message to display
+        newest = False
         if len(gmail.database) == 0:
             continue
         if len(gmail.messages_to_add) > 0:
             message_object = gmail.messages_to_add.pop(0)
+            newest_id = message_object.id
         else:
             message_object = GetNextMessage(EXCLUDED_MESSAGES)
 
@@ -69,6 +74,8 @@ while True:
         # Add dashes to phone number
         phone = ('-').join([phone[-7:-4], phone[-4:]]) 
         output = phone + ": " + message_object.message
+        if message_object.id == newest_id:
+            output = "NEWEST" + output
 
         output_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         output_sock.sendto(output.encode('utf-8'), (UDP_IP, UDP_PORT))
@@ -91,6 +98,7 @@ while True:
         print "goodbye"
         break
 
+    # time.sleep(2)
 
 
 # Get time in RFC 2822 Internet email standard:

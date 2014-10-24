@@ -12,7 +12,7 @@ void ofApp::setup(){
     textMessageInput.Create();
     textMessageInput.Bind(UDP_PORT);
     textMessageInput.SetNonBlocking(true);
-    text_speed = 1;
+    text_speed = 2;
     message_spacing = 30;
     
     toPython.Create();
@@ -41,7 +41,17 @@ void ofApp::update(){
     if (textMessage[0] != 0) {
         Message newMessage;
         newMessage.text = textMessage;
-        newMessage.width = font.stringWidth(textMessage);
+        string beginning = newMessage.text.substr(0,6);
+        if (beginning == "NEWEST") { // Terrible hack to get most recent message
+            newMessage.newest = true;
+            newMessage.text = newMessage.text.substr(6);
+            // Hackier and hackier, cried Alice
+            for (int i = 0; i < messages.size(); i++) {
+                messages[i].newest = false;
+            }
+        }
+        else newMessage.newest = false;
+        newMessage.width = font.stringWidth(newMessage.text);
         newMessage.position = WINDOW_WIDTH + newMessage.width;
         if (messages.size() > 0 ) {
             newMessage.position = messages.back().position + newMessage.width + message_spacing;
@@ -49,22 +59,21 @@ void ofApp::update(){
         messages.push_back(newMessage);
     }
     
-    if (running) {
-        for (int i = 0; i < messages.size(); i++) {
-            messages[i].position -= text_speed;
-            // Erase messages off the screen
-            if (messages[i].position < 0) {
-                messages.erase(messages.begin());
+    if (messages.size() > 0) {
+        if (running) {
+            for (int i = 0; i < messages.size(); i++) {
+                messages[i].position -= text_speed;
             }
         }
-    }
-    
-    if (messages.size() > 0) {
+        // Erase messages off the screen
         Message lastMessage = messages.back();
         // Ask for a new message if the final one has cleared the end of the screen
         if (lastMessage.position < WINDOW_WIDTH) {
             string message_to_python = "new message";
             toPython.Send(message_to_python.c_str(), message_to_python.length());
+        }
+        if (messages[0].position < 0) {
+            messages.erase(messages.begin());
         }
     }
     // Ask for a new message if we have none
@@ -96,6 +105,12 @@ void ofApp::draw(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (int i = 0; i < messages.size(); i++) {
+        if (messages[i].newest == true) {
+            ofSetColor(255, 0, 0);
+        }
+        else {
+            ofSetColor(255, 255, 255);
+        }
         font.drawString(messages[i].text, messages[i].position - messages[i].width, font.getSize());
     }
 
@@ -174,7 +189,7 @@ void ofApp::keyPressed(int key){
         }
     }
     
-    text_speed = ofClamp(text_speed, 0, 7);
+    text_speed = ofClamp(text_speed, 0, 70);
     
     if (message.length() > 0) {
         toPython.Send(message.c_str(), message.length());

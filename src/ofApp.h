@@ -30,6 +30,8 @@ public:
         // Right hand boundary of the message
         float position;
         int width;
+        // If this is the most recent message
+        bool newest;
     };
     vector<Message> messages;
     float text_speed;

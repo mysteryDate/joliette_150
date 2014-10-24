@@ -154,6 +154,7 @@ class Monitor():
             self.recentThreads = self.service.users().history().list(
                 userId='me', startHistoryId=self.max_history_id, labelId=self.match_label_id).execute()
             self.max_history_id = self.recentThreads['historyId']
+            # pdb.set_trace()
         except Exception as e: 
             if self._verbose: print (e)
             return
@@ -182,7 +183,7 @@ class Monitor():
                         # It was fully deleted
                         status = "Deleted"
                         del self.database[message_id]
-                    if self._verbose:   print report_string, status
+                    if self._verbose:   print (report_string).encode('utf-8'), status
                 # Then it must be new
                 else:
                     if self.add_message_to_database(message_id):
@@ -221,7 +222,7 @@ class Monitor():
         new_message_entry.message = unicode(new_message_entry.message, 'utf-8')
         self.database[message_id] = new_message_entry
         if self._verbose:
-            print str(message_id)+"\t| "+new_message_entry.message+"\t| Added"
+            print (str(message_id)+"\t| "+new_message_entry.message+"\t| Added").encode('utf-8')
         if self.response:
             self.respond(message_id, self.RESPONSE)
         return True
@@ -234,7 +235,7 @@ class Monitor():
         print "-"*150 #A horizontal line
         for messageId in self.database.keys():
             mess = self.database[messageId]
-            print messageId, "\t|", mess.sender, "\t|", mess.time, "\t|", mess.message
+            print messageId, "\t|", mess.sender, "\t|", mess.time, "\t|", (mess.message).encode('utf-8')
 
     def respond(self, message_id, response_text):
         """
