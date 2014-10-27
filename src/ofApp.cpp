@@ -4,7 +4,7 @@
 void ofApp::setup(){
     
     // For portability
-//    ofSetDataPathRoot("../Resources/data/");
+    ofSetDataPathRoot("../Resources/data/");
     ofSetFrameRate(60);
     
     font.loadFont("shimmerbold_opentype.ttf", 30, true, true);
