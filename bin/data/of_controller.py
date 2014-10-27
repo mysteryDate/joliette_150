@@ -11,7 +11,6 @@ PATH = sys.argv[-1]
 import gmonitor
 import socket
 import time
-import imaplib2
 
 import threading
 
